@@ -1,14 +1,9 @@
 import os
 import sys
-
 from networksecurity.exception.exception import NetworkSecurityException 
 from networksecurity.logging.logger import logging
-
 from networksecurity.entity.artifact_entity import DataTransformationArtifact,ModelTrainerArtifact
 from networksecurity.entity.config_entity import ModelTrainerConfig
-
-
-
 from networksecurity.utils.ml_utils.model.estimator import NetworkModel
 from networksecurity.utils.main_utils.utils import save_object,load_object
 from networksecurity.utils.main_utils.utils import load_numpy_array_data,evaluate_models
@@ -24,6 +19,14 @@ from sklearn.ensemble import (
     RandomForestClassifier,
 )
 import mlflow
+import joblib
+from urllib.parse import urlparse
+
+import dagshub
+#dagshub.init(repo_owner='priyankasa2092004', repo_name='Network-Security-Project', mlflow=True)
+os.environ["MLFLOW_TRACKING_URI"]="https://dagshub.com/priyankasa2092004/Network-Security-Project.mlflow"
+os.environ["MLFLOW_TRACKING_USERNAME"]="priyankasa2092004"
+os.environ["MLFLOW_TRACKING_PASSWORD"]="f87f1c357f9072395f37d34ad2e73d488d6e85fa"
 
 
 class ModelTrainer:
@@ -35,6 +38,8 @@ class ModelTrainer:
             raise NetworkSecurityException(e,sys)
         
     def track_mlflow(self,best_model,classificationmetric):
+        mlflow.set_registry_uri("https://dagshub.com/priyankasa2092004/Network-Security-Project.mlflow")
+        tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
         with mlflow.start_run():
             f1_score=classificationmetric.f1_score
             precision_score=classificationmetric.precision_score
@@ -43,7 +48,8 @@ class ModelTrainer:
             mlflow.log_metric("f1_score",f1_score)
             mlflow.log_metric("precision",precision_score)
             mlflow.log_metric("recall_score",recall_score)
-            mlflow.sklearn.log_model(best_model,"model")
+            joblib.dump(best_model, "model.pkl")
+            mlflow.log_artifact("model.pkl")
 
 
         

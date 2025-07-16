@@ -6,7 +6,8 @@ pymongo[srv]==4.13.2
 scikit-learn
 pyaml
 mlflow
-
+dagshub
+joblib
 
 
 
